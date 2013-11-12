@@ -1,0 +1,4 @@
+name = "Node Train List"
+description = "Node list module by type"
+core = "7.x"
+files[] = node_train_list.module
