@@ -1,0 +1,76 @@
+<?php
+
+/**
+ * Implements form alter().
+ */
+
+function node_train_list_form_node_type_form_alter(&$form, &$form_state, $form_id) {
+  
+  $form['listing']=array(
+    '#type' => 'fieldset',
+    '#title' => 'Node type listing',
+    '#group' => 'additional_settings'
+  );
+
+
+  $form['listing']['checkbox']=array(
+    '#type' => 'checkbox',
+    '#title' => t('Añadir nodos a un listado de este tipo de contenido'),
+    '#default_value' => variable_get('node_train_list_form_node_type_form_submit', 0),
+  );
+
+  $form['#submit'][]  = 'node_train_list_form_node_type_form_submit';
+
+
+}
+
+function node_train_list_form_node_type_form_submit($form, &$form_state) {
+  variable_set('node_train_list_form_node_type_form_submit', $form_state['values']['checkbox']);
+}
+/**
+ * Implements hook_menu()
+ */
+
+function node_train_list_menu() {
+  $items = array (
+    'node-type-form' => array (
+      'page callback' => 'node_train_list_callback',
+      'page arguments' => array('node_train_list_node_type_form'),
+      'access callback' => 'user_access',
+      'access arguments' => array('access to node listing'),
+
+    ),
+  );
+  return $items;
+}
+
+/**
+ * Implements hook permission
+ */
+
+function node_train_list_permission() {
+return array(
+  'access to node listing' => array(
+    'title' => t('Administer Node Listing'),
+    'description' => t('Administer the permission to Node Train List'),
+  ),
+);
+}
+
+/**
+ * Define my callback
+ */
+
+function node_train_list_callback($variables) {
+  $header = array('Cell 1', 'Cell 2');
+  $rows = array( 
+            array('A', 'B'),
+            array('C', 'D')
+  );
+  $output = theme('table', 
+           array('header' => $header, 
+                  'rows' => $rows ));
+  return $output;
+}
+
+

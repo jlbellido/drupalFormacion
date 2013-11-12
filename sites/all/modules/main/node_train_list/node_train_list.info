@@ -1,0 +1,5 @@
+name = Node Listing
+description = List all the nodes of a node type
+dependencies[] = entity
+package = Emergya
+core = 7.x
