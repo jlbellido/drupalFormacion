@@ -1,0 +1,105 @@
+<?php
+/**
+ *  @file
+ */
+
+
+/**
+ *  Implements hook_menu()
+ */
+function node_train_list_menu(){
+
+  $items['node-train-list'] = array(
+    'title' => 'Node train list',
+    'page callback' => 'node_train_list_view',
+    'access callback' => 'user_access',
+    'access arguments' => array('node_train_list_permission'),
+    'type' => MENU_NORMAL_ITEM
+  );
+
+  return $items;
+}
+
+
+/**
+ * Implements hook_permission()
+ */
+function node_train_list_permission() {
+  return array(
+    'node_train_list_permission' => array(
+      'title' => t('Access to node train list page'),
+      'description' => t('Determine access to node train list page')
+    )
+  );
+}
+
+
+/**
+ *  Implements hook_form_FORM_ID_alter()
+ */
+function node_train_list_form_node_type_form_alter(&$form, &$form_state){
+
+  if (isset($form['type'])){
+    $form['node_listing'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Node listing settings'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#group' => 'additional_settings',
+    );
+    $form['node_listing']['node_listing_show_node'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Show this type in listing'),
+      '#default_value' => variable_get('node_listing_show_node_' . $form['#node_type']->type, TRUE),
+      '#description' => t('Check this if you want node type to appear in listings')
+    );
+    $form['#submit'][] = 'node_train_list_form_submit';
+  }
+
+}
+
+
+/**
+ * Implements node_train_list_form_submit()
+ */
+function node_train_list_form_submit($form, &$form_state){
+
+  $selected_types = variable_get('node_type_variables', array());
+
+  if ($form_state['values']['node_listing_show_node'] == TRUE){
+    if (!array_key_exists($form_state['values']['type'], $selected_types)){
+      $selected_types[$form_state['values']['type']] = $form_state['values']['type'];
+    }  
+  }
+  else{
+    if (array_key_exists($form_state['values']['type'], $selected_types)){
+      unset($selected_types[$form_state['values']['type']]);
+    }
+  }
+
+  variable_set('node_type_variables', $selected_types);
+
+}
+
+
+/**
+ * Implements node_train_list_view()
+ */
+function node_train_list_view(){
+
+  $node_types = variable_get('node_type_variables', array());
+  $header = array(t('Node title'), t('Content type'));
+  $rows = array();
+
+  if (!empty($node_types)){
+    $result = db_query("SELECT title, type FROM {node} WHERE type IN (:types)", array(':types' => $node_types));
+
+    foreach ($result as $row){
+      $rows[] = array(t($row->title), t($row->type));
+    }
+  }
+
+  return theme('table', array('header' => $header, 'rows' => $rows));  
+
+}
+
