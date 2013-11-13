@@ -1,0 +1,112 @@
+<?php
+/**
+* @file
+* Custom module to show a listing of specific nodes
+*/
+
+/**
+ * Implements hook_menu().
+ */
+function node_train_list_menu() {
+  $items = array(
+    'my-custom-listing' => array(
+      'page callback' => 'node_train_list_page_listing',
+      'access callback' => 'user_access',
+      'access arguments' => array('access to custom listing'),
+    ),
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_form_FORM_ID_form_alter().
+ */
+function node_train_list_form_node_type_form_alter(&$form, &$form_state, $form_id) {
+  //New fieldset:
+  $form['node_listing'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Node listing settings',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#group' => 'additional_settings'
+  );
+
+  //Recover node listing option.
+  $default_value = variable_get('node_listing_show_node_' . $form['#node_type']->type, 0);
+
+  //New checkbox
+  $form['node_listing']['mycheckbox'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Show this node type in listings'),
+      '#default_value' => $default_value,
+      '#description' => t('Show type'),
+      );
+
+  //Submit function
+  $form['#submit'][] = 'node_train_list_submit';
+}
+
+/**
+* Nothing is saved if node type is not specified. Else, save checkbox state.
+*/
+function node_train_list_submit($form, &$form_state) {
+  if (!empty($form['#node_type']->type)) {
+    variable_set('node_listing_show_node_' . $form['#node_type']->type, $form_state['values']['mycheckbox']);
+  }
+}
+
+/**
+ * Implements hook_permission().
+ */
+function node_train_list_permission() {
+  return array(
+    'access to custom listing' => array(
+      'title' => t('Access to my custom listing'),
+      'description' => t('Determine access to listing'),
+    ),
+  );
+}
+
+/**
+* Prints listing of nodes if node_type has listing checkbox checked.
+*/
+function node_train_list_page_listing() {
+  $header = array(t('Nid'), t('Title'), t('Type'), t('Created'), t('Published'), t('Sticky'), t('Promoted'));
+
+  //Obtenemos los tipos de nodos que tienen la casilla "show in listing"
+  $node_types = array_keys(node_type_get_types());
+  $show_types = array();
+  foreach ($node_types as $node_type) {
+    if (variable_get('node_listing_show_node_' . $node_type, 0) == 1) {
+      $show_types[] = $node_type;
+    }
+  }
+
+  //Si existe alguno, obtenemos los nodos de esos tipos y los mostramos.
+  if (!empty($show_types)) {
+    //Consulta estilo Drupal 7
+    $query = db_select('node', 'n')->fields('n');
+    $query->condition('n.type', $show_types, 'IN');
+    $nodes = $query->execute();
+
+    //Procesamos cada fila/nodo
+    foreach ($nodes as $node) {
+      $rows[] = array(
+        $node->nid,
+        l($node->title, 'node/' . $node->nid . '/edit'),
+        $node->type,
+        format_date($node->created),
+        $node->status,
+        $node->sticky,
+        $node->promote,
+      );
+    }
+
+    //Llamamos al theme. theme_table no funciona.
+    $variables = array('header' => $header, 'rows' => $rows);
+    return theme('table', $variables);
+    }
+    else {
+      return t('No element has been found');
+    }
+}
