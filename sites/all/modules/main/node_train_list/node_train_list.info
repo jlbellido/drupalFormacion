@@ -1,0 +1,6 @@
+name = "Listing module"
+description = "Listing Drupal class"
+core = "7.x"
+package = Emergya
+dependencies[] = entity
+files[] = node_train_list.module
