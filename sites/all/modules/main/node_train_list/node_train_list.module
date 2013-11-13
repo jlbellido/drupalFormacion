@@ -78,7 +78,7 @@ function node_train_list_page_listing() {
   $show_types = array();
   foreach ($node_types as $node_type) {
     if (variable_get('node_listing_show_node_' . $node_type, 0) == 1) {
-    $show_types[] = $node_type;
+      $show_types[] = $node_type;
     }
   }
 
