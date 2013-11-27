@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the FeatureRule feature.
+ */
+
+include_once 'featurerule.features.inc';
